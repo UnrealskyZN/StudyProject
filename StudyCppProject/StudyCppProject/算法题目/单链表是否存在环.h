@@ -1,5 +1,4 @@
 #pragma once
-#include<iostream>
 
 /*本题需要一个链表结点结构*/
 struct ListNode//用结构体表示链表节点
