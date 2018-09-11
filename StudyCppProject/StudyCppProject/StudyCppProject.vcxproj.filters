@@ -18,19 +18,5 @@
     <ClCompile Include="main.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="算法题目\单链表是否存在环.cpp">
-      <Filter>算法题目</Filter>
-    </ClCompile>
-    <ClCompile Include="算法题目\超大数组标记数据是否找到.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="算法题目\单链表是否存在环.h">
-      <Filter>算法题目</Filter>
-    </ClInclude>
-    <ClInclude Include="算法题目\超大数组标记数据是否找到.h">
-      <Filter>算法题目</Filter>
-    </ClInclude>
   </ItemGroup>
 </Project>

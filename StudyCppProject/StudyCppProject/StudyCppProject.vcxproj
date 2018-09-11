@@ -144,12 +144,6 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="算法题目\单链表是否存在环.cpp" />
-    <ClCompile Include="算法题目\超大数组标记数据是否找到.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="算法题目\单链表是否存在环.h" />
-    <ClInclude Include="算法题目\超大数组标记数据是否找到.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
