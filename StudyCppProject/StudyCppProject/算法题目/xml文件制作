@@ -1,0 +1,602 @@
+//乱写的...
+#include<iostream>
+#include <fstream>
+using namespace std;
+#define FILE_IN_PATH	"C:\\Users\\UnrealSky_M_1\\Desktop\\input.txt"
+#define FILE_OUT_PATH	"C:\\Users\\UnrealSky_M_1\\Desktop\\output.txt"
+
+void makeXml()
+{
+	ifstream in;
+	ofstream out;
+	in.open(FILE_IN_PATH);
+	out.open(FILE_OUT_PATH);
+	char buffer[256];//足够容纳一行的内容
+	char xml[] = "num";//修改这里可以修改xml标签
+	while (!in.eof())
+	{
+		in.getline(buffer, 100);//足够长
+		//out << "<" << xml << ">" << buffer << "</" << xml << ">" << endl;
+		out << "<" << xml << " x=\""<< buffer << "\" >" << "</" << xml << ">" << endl;
+	}
+}
+
+
+void makeXmlPath(ifstream &in, fstream &out, char *name, char *c_name, int tab_num)
+{
+	char buffer[1024];//足够容纳一行的内容
+	int road_num = 0;
+	streampos tt_pos_start;
+	//第一层【占位】
+	{
+		for (int i = 0; i < tab_num; ++i) { out << "\t"; }
+		tt_pos_start = out.tellg();//获得当前文件位置
+		out << "<" << name << " num = \"" << road_num << "\">" << endl;
+	}
+	//第二层
+	while (!in.eof())
+	{
+		//第二层开始
+		for (int i = 0; i < tab_num + 1; ++i) { out << "\t"; }
+		out << "<road index=\"" << road_num << "\">" << endl;
+		road_num++;
+		for (int i = 0; i < 3; ++i)
+		{
+			int vec_num = 0;
+			int x;
+			in.getline(buffer,1000);
+			//第三层开始
+			for (int i = 0; i < tab_num + 2; ++i) { out << "\t"; }
+			auto temp_out_pos_start = out.tellg();
+			out << "<path_" << i << " num=\"" << vec_num << "\">" << endl;
+			int j = 0;
+			while (true)
+			{
+				int num = 0;
+				while (buffer[j] != '\t' && buffer[j] != '\0')
+				{
+					num = num * 10 + buffer[j] - '0';//获得最低位
+					j++;
+				}
+				if (num == 0)
+					break;
+				vec_num++;
+				for (int i = 0; i < tab_num + 3; ++i) { out << "\t"; }
+				out << "<dict index=\"" << num << "\"></dict>" << endl;
+				if (buffer[j] == '\0')
+					break;
+				j++;
+			}
+			//第三层结束
+			for (int i = 0; i < tab_num + 2; ++i) { out << "\t"; }
+			out << "</path_" << i << ">" << endl;
+			auto temp_out_pos_end = out.tellg();//获得当前文件位置
+			out.seekg(temp_out_pos_start);//会到某个位置
+			out << "<path_" << i << " num=\"" << vec_num << "\">" << endl;
+			out.seekg(temp_out_pos_end);
+		}
+		//第二层结束
+		for (int i = 0; i < tab_num + 1; ++i) { out << "\t"; }
+		out << "</road>" << endl;
+	}
+	//第一层结束
+	{
+		for (int i = 0; i < tab_num; ++i) { out << "\t"; }
+		out << "</" << name << ">" << endl;
+	}
+	//修改第一层
+	{
+		out.seekp(0, ios::beg);
+		for (int i = 0; i < tab_num; ++i) { out << "\t"; }
+		auto tt_pos_end = out.tellg();//获得当前文件位置
+		out.seekg(tt_pos_start);//会到某个位置
+		out << "<" << name << " num = \"" << road_num << "\">" << endl;
+		out.seekg(tt_pos_end);//会到某个位置
+	}
+}
+
+void makeXmlPos(ifstream &in, ofstream &out, char *name, char *c_name, int tab_num)//ch = pos_path
+{
+	int num = 0;
+	//第一层【占位】
+	for (int i = 0; i < tab_num; ++i) { out << "\t"; }
+	out << "<" << name << " num = \"" << num << "\" >" << endl;
+	//第二层
+	while (!in.eof())
+	{
+		num++;
+		int x, y;
+		in >> x >> y;
+		for (int i = 0; i < tab_num + 1; ++i) { out << "\t"; }
+		out << "<" << c_name << " x=\"" << x << "\" " << "y=\"" << y << "\">" << "</" << c_name << ">" << endl;
+	}
+	//第一层结束
+	for (int i = 0; i < tab_num; ++i){ out << "\t"; }
+	out << "</" << name << ">" << endl;
+	//修改第一层
+	out.seekp(0, ios::beg);
+	for (int i = 0; i < tab_num; ++i) { out << "\t"; }
+	out << "<" << name << " num = \"" << num << "\" >" << endl;
+}
+
+void makeXmlLevel()
+{
+	int tab_num = 0;
+	ifstream in;
+	fstream out;
+	in.open(FILE_IN_PATH);
+	out.open(FILE_OUT_PATH);
+	int lv, money, hp;
+	int *pos_path_x, *pos_path_y, pos_path_num;
+	int *pos_land_x, *pos_land_y, pos_land_num;
+	int **road, *path_pos_num, road_num;
+	int monster_group_num, *monster_group_frame;
+	//获取第一层数据
+	{
+		cout << "请输入关卡编号：";
+		in >> lv;
+		cout << "开始金钱：";
+		in >> money;
+		cout << "最大生命：";
+		in >> hp;
+	}
+	//<level>
+	out << "<level lv = \'" << lv << "\' money = \'" << money << "\' hp = \'" << hp << "\'>" << endl;
+	{
+		//<map_path></map_path>
+		out << "\t" << "<map_path map_kind = \"0\">maple_guardians/game/level_" << lv <<".png</map_path>" << endl;
+		//<pos>
+		out << "\t" << "<pos>" << endl;
+		{
+			cout << "请输入坐标个数：（不包含0）";
+			in >> pos_path_num;
+			//<pos_path>
+			out << "\t\t" << "<pos_path num = \"" << pos_path_num << "\">" << endl;
+			{
+				pos_path_x = new int[pos_path_num];
+				pos_path_y = new int[pos_path_num];
+				cout << "请输入坐标点【直接复制整个内容即可】" << endl;
+				for (int j = 0; j < pos_path_num; j++){in >> pos_path_x[j];}
+				for (int j = 0; j < pos_path_num; j++){in >> pos_path_y[j];}
+				for (int j = 0; j < pos_path_num; j++){out << "\t\t\t" << "<pos x=\"" << pos_path_x[j] << "\" y=\"" << pos_path_y[j] << "\"></pos>" << endl;}
+			}
+			//</pos_path>
+			out << "\t\t" << "</pos_path>" << endl;
+			cout << "请输入坐标个数：（不包含0）";
+			in >> pos_land_num;
+			//<pos_land>
+			out << "\t\t" << "<pos_land num = \"" << pos_land_num << "\">" << endl;
+			{
+				pos_land_x = new int[pos_land_num];
+				pos_land_y = new int[pos_land_num];
+				cout << "请输入坐标点【直接复制整个内容即可】" << endl;
+				for (int j = 0; j < pos_land_num; j++){in >> pos_land_x[j];}
+				for (int j = 0; j < pos_land_num; j++){in >> pos_land_y[j];}
+				for (int j = 0; j < pos_land_num; j++){out << "\t\t\t" << "<pos x=\"" << pos_land_x[j] << "\" y=\"" << pos_land_y[j] << "\"></pos>" << endl;}
+			}
+			//</pos_land>
+			out << "\t\t" << "</pos_land>" << endl;
+		}
+		//</pos>
+		out << "\t" << "</pos>" << endl;
+
+		in >> road_num;
+		road = new int *[road_num * 3];
+		path_pos_num = new int[road_num * 3];
+		for (int i = 0; i < road_num * 3; ++i)
+		{
+			in >> path_pos_num[i];
+			road[i] = new int[path_pos_num[i]];
+		}
+		//<path>
+		out << "\t" << "<path num = \"" << road_num << "\">" << endl;
+		{
+			for (int i = 0; i < road_num; ++i)
+			{
+				//<road index="">
+				out << "\t\t" << "<road index = \"" << i << "\">" << endl;
+				for (int j = 0; j < 3; ++j)
+				{
+					//<path_j num="">
+					out << "\t\t\t" << "<path_" << j << " num = \"" << path_pos_num[i*3+j] << "\">" << endl;
+					for (int k = 0; k < path_pos_num[i * 3 + j]; ++k)
+					{
+						int index;
+						in >> index;
+						//<dict index=""></dict>
+						out << "\t\t\t\t" << "<dict index=\"" << index << "\"></dict>" << endl;
+					}
+					//</path_j>
+					out << "\t\t\t" << "</path_" << j << ">" << endl;
+				}
+				//</road
+				out << "\t\t" << "</road>" << endl;
+			}
+		}
+		//</path>
+		out << "\t" << "</path>" << endl;
+		//<monster>
+		out << "\t" << "<monster>" << endl;
+		{
+
+		}
+		//</monster>
+		out << "\t" << "</monster>" << endl;
+	}
+	//</level>
+	out << "</level>" << endl;
+	out.close();
+	in.close();
+}
+
+void makeXmlLevelMsg()
+{
+	ifstream in;
+	fstream out;
+	in.open(FILE_IN_PATH);
+	out.open(FILE_OUT_PATH);
+	//char ch1[] = "pos_land";
+	//char ch2[] = "pos";
+	//makeXmlPos(in, out, ch1, ch2, 2);
+	char ch1[] = "path";
+	char ch2[] = "road";
+	makeXmlPath(in, out, ch1, ch2, 1);
+	in.close();
+	out.close();
+}
+
+void openFile(ifstream &in, fstream &out);
+void closeFile(ifstream &in, fstream &out);
+void makeLevelXML(ifstream &in, fstream &out);
+/*不用记录数量的写一行*/
+void makeInLine0(ifstream &in, fstream &out, const char *name, int tab_num);
+/*记录数量的写一行*/
+void makeInLine1(ifstream &in, fstream &out, const char *name, int tab_num);
+/*记录数量的写多行*/
+void makeInLine2(ifstream &in, fstream &out, const char *name, int tab_num, int line_num);
+/*记录数量，同时避免了空闲位置大路小路编号*/
+void makeInLine3(ifstream &in, fstream &out, const char *name, int tab_num, int line_num);
+/*记录monster wave*/
+void makeXML4(ifstream &in, fstream &out, const char *name, int tab_num);
+/*记录monster group*/
+void makeXML5(ifstream &in, fstream &out, const char *name, int tab_num);
+void removeFileType(ifstream &in, fstream &out)
+{
+	char buffer[1024];//足够容纳一行的内容
+	int num = 0;
+	//第二层
+	while (!in.eof())
+	{
+		in.getline(buffer, 1000);
+		int i = 0;
+		out << "#define T_" << num << "\t\"";
+		while (buffer[i] != '.')
+		{
+			out << buffer[i];
+			++i;
+		}
+		out << "\"" << endl;
+		num++;
+	}
+}
+
+
+//int main()
+//{
+//	ifstream in;
+//	fstream out;
+//	openFile(in,out);
+//	makeInLine0(in, out, "monster_info", 1);
+//	closeFile(in,out);
+//}
+
+void openFile(ifstream &in, fstream &out)
+{
+	in.open(FILE_IN_PATH);
+	out.open(FILE_OUT_PATH, ios::out);//清空再打开
+}
+void closeFile(ifstream &in, fstream &out)
+{
+	in.close();
+	out.close();
+}
+void makeLevelXML(ifstream &in, fstream &out)
+{
+	makeInLine0(in, out, "level", 0);
+	for (int i = 0; i < 1; ++i) { out << "\t"; }
+	out << "<pos>" << endl;
+	makeInLine2(in, out, "pos_path", 2, 2);
+	makeInLine2(in, out, "pos_land", 2, 2);
+	for (int i = 0; i < 1; ++i) { out << "\t"; }
+	out << "</pos>" << endl;
+}
+
+void makeInLine0(ifstream &in, fstream &out, const char *name, int tab_num)
+{
+	char buffer[1024];//足够容纳一行的内容
+	streampos tt_pos_start, tt_pos_end;
+	//第一层【占位】
+	{
+		for (int i = 0; i < tab_num; ++i) { out << "\t"; }
+		out << "<" << name << ">" << endl;
+	}
+	//第二层
+	{
+		in.getline(buffer, 1000);
+		for (int i = 0; i < tab_num + 1; ++i) { out << "\t"; }
+		out << "<dict>";
+		int i = 0;
+		while (buffer[i] != '\0')
+		{
+			if (buffer[i] != '\t')
+				out << buffer[i];
+			else
+				out << ',';
+			++i;
+		}
+		out << "</dict>" << endl;
+	}
+	//第一层
+	{
+		for (int i = 0; i < tab_num; ++i) { out << "\t"; }
+		out << "</" << name << ">" << endl;
+	}
+}
+
+void makeInLine1(ifstream &in, fstream &out,const char *name, int tab_num)
+{
+	char buffer[1024];//足够容纳一行的内容
+	int num = 0;
+	streampos tt_pos_start,tt_pos_end;
+	//第一层【占位】
+	{
+		for (int i = 0; i < tab_num; ++i) { out << "\t"; }
+		tt_pos_start = out.tellg();//获得当前文件位置
+		out << "<" << name << " num = \"" << 99 << "\">" << endl;
+	}
+	//第二层
+	while (!in.eof())
+	{
+		in.getline(buffer, 1000);
+		for (int i = 0; i < tab_num + 1; ++i) { out << "\t"; }
+		out << "<dict>";
+		int i = 0;
+		while (buffer[i] != '\0')
+		{
+			if (buffer[i] != '\t')
+				out << buffer[i];
+			else
+				out << ',';
+			++i;
+		}
+		out << "</dict>" << endl;
+		++num;
+	}
+	//第一层
+	{
+		tt_pos_end = out.tellg();//获得当前文件位置
+		out.seekg(tt_pos_start);//回到之前位置
+		out << "<" << name << " num = \"" << num << "\">" << endl;
+
+		out.seekg(tt_pos_end);//会到后来位置
+		for (int i = 0; i < tab_num; ++i) { out << "\t"; }
+		out << "</" << name << ">" << endl;
+	}
+}
+
+void makeInLine2(ifstream &in, fstream &out, const char *name, int tab_num, int line_num)
+{
+	char buffer[1024];//足够容纳一行的内容
+	int num = 1;//至少一个
+	streampos tt_pos_start, tt_pos_end;
+	//第一层【占位】
+	{
+		for (int i = 0; i < tab_num; ++i) { out << "\t"; }
+		tt_pos_start = out.tellg();//获得当前文件位置
+		out << "<" << name << " num = \"" << 99 << "\">" << endl;
+	}
+	//第二层
+	for (int line = 0; line < line_num; ++line)
+	{
+		in.getline(buffer, 1000);
+		for (int i = 0; i < tab_num + 1; ++i) { out << "\t"; }
+		out << "<dict>";
+		int i = 0;
+		while (buffer[i] != '\0')
+		{
+			if (buffer[i] != '\t')
+				out << buffer[i];
+			else
+			{
+				out << ',';
+				if (line == 0) ++num;//第一次才计数
+			}
+			++i;
+		}
+		out << "</dict>" << endl;
+	}
+	//第一层
+	{
+		tt_pos_end = out.tellg();//获得当前文件位置
+		out.seekg(tt_pos_start);//回到之前位置
+		out << "<" << name << " num = \"" << num << "\">" << endl;
+
+		out.seekg(tt_pos_end);//会到后来位置
+		for (int i = 0; i < tab_num; ++i) { out << "\t"; }
+		out << "</" << name << ">" << endl;
+	}
+
+}
+
+void makeInLine3(ifstream & in, fstream & out, const char * name, int tab_num, int line_num)
+{
+	char buffer[1024];//足够容纳一行的内容
+	int num = 1;//至少一个
+	streampos tt_pos_start, tt_pos_end;
+	//第一层【占位】
+	{
+		for (int i = 0; i < tab_num; ++i) { out << "\t"; }
+		tt_pos_start = out.tellg();//获得当前文件位置
+		out << "<" << name << " num = \"" << 99 << "\">" << endl;
+	}
+	//第二层
+	for (int line = 0; line < line_num; ++line)
+	{
+		in.getline(buffer, 1000);
+		for (int i = 0; i < tab_num + 1; ++i) { out << "\t"; }
+		out << "<dict>";
+		int i = 0;
+		while (buffer[i] != '\0')
+		{
+			if (buffer[i] != '\t')
+				out << buffer[i];
+			else
+			{
+				if (buffer[i + 1] == '\t' || buffer[i+1]=='\0')
+					break;
+				out << ',';
+				if (line == 0) ++num;//第一次才计数
+			}
+			++i;
+		}
+		out << "</dict>" << endl;
+	}
+	//第一层
+	{
+		tt_pos_end = out.tellg();//获得当前文件位置
+		out.seekg(tt_pos_start);//回到之前位置
+		out << "<" << name << " num = \"" << num << "\">" << endl;
+
+		out.seekg(tt_pos_end);//会到后来位置
+		for (int i = 0; i < tab_num; ++i) { out << "\t"; }
+		out << "</" << name << ">" << endl;
+	}
+}
+
+void makeXML4(ifstream & in, fstream & out, const char * name, int tab_num)
+{
+	char buffer[1024];//足够容纳一行的内容
+	int num = -1;//
+	streampos tt_pos_start, tt_pos_end, tt_pos_frame_s, tt_pos_frame_e;
+	//第一层【占位】
+	{
+		for (int i = 0; i < tab_num; ++i) { out << "\t"; }
+		tt_pos_start = out.tellg();//获得当前文件位置
+		out << "<" << name << " num = \"" << 99 << "\">" << endl;
+	}
+	//第二层
+	int a, b, c, d;//4个数值
+	int frame_num = 0;
+	do
+	{
+		in >> a >> b >> c >> d;//读一行
+		++frame_num;
+		if (a < 0)
+		{//记录波数
+			if (a == -1)
+			{
+				for (int i = 0; i < tab_num + 1; ++i) { out << "\t"; }
+				out << "<wave num = \"" << frame_num << "\">" << endl;
+				for (int i = 0; i < tab_num + 2; ++i) { out << "\t"; }
+				out << "<dict>" << a << ',' << b << ',' << c << ',' << d << "</dict>" << endl;
+				for (int i = 0; i < tab_num + 1; ++i) { out << "\t"; }
+				out << "</wave>" << endl;
+				frame_num = 0;
+				for (int i = 0; i < tab_num + 1; ++i) { out << "\t"; }
+				tt_pos_frame_s = out.tellg();
+				out << "<wave num = \"99\">" << endl;//占位
+			}
+			else if(a == -2)
+			{
+				for (int i = 0; i < tab_num + 2; ++i) { out << "\t"; }
+				out << "<dict>" << a << ',' << b << ',' << c << ',' << d << "</dict>" << endl;
+				for (int i = 0; i < tab_num + 1; ++i) { out << "\t"; }
+				out << "</wave>" << endl;
+				tt_pos_frame_e = out.tellg();
+				out.seekg(tt_pos_frame_s);//回到之前位置
+				out << "<wave num = \"" << frame_num << "\">" << endl;
+				out.seekg(tt_pos_frame_e);//回到之后位置
+				frame_num = 0;
+
+				for (int i = 0; i < tab_num + 1; ++i) { out << "\t"; }
+				tt_pos_frame_s = out.tellg();
+				out << "<wave num = \"99\">" << endl;//占位
+			}
+			else if (a == -3)
+			{
+				for (int i = 0; i < tab_num + 2; ++i) { out << "\t"; }
+				out << "<dict>" << a << ',' << b << ',' << c << ',' << d << "</dict>" << endl;
+				for (int i = 0; i < tab_num + 1; ++i) { out << "\t"; }
+				out << "</wave>" << endl;
+				tt_pos_frame_e = out.tellg();
+				out.seekg(tt_pos_frame_s);//回到之前位置
+				out << "<wave num = \"" << frame_num << "\">" << endl;
+				out.seekg(tt_pos_frame_e);//回到之后位置
+				frame_num = 0;
+			}
+			++num;
+		}
+		else
+		{
+			for (int i = 0; i < tab_num + 2; ++i) { out << "\t"; }
+			out << "<dict>" << a << ',' << b << ',' << c << ',' << d << "</dict>" << endl;
+		}
+	} while (!in.eof());
+	//第一层
+	{
+		tt_pos_end = out.tellg();//获得当前文件位置
+		out.seekg(tt_pos_start);//回到之前位置
+		out << "<" << name << " num = \"" << num << "\">" << endl;
+
+		out.seekg(tt_pos_end);//会到后来位置
+		for (int i = 0; i < tab_num; ++i) { out << "\t"; }
+		out << "</" << name << ">" << endl;
+	}
+}
+
+void makeXML5(ifstream & in, fstream & out, const char * name, int tab_num)
+{
+	char buffer[1024];//足够容纳一行的内容
+	int num = 0;//
+	streampos tt_pos_start, tt_pos_end, tt_pos_frame_s, tt_pos_frame_e;
+	//第一层【占位】
+	{
+		for (int i = 0; i < tab_num; ++i) { out << "\t"; }
+		tt_pos_start = out.tellg();//获得当前文件位置
+		out << "<" << name << " num = \"" << 99 << "\">" << endl;
+	}
+	//第二层
+	int a, b, c;//4个数值
+	int frame_num = 0;
+	do
+	{
+		for (int i = 0; i < tab_num + 1; ++i) { out << "\t"; }
+		tt_pos_frame_s = out.tellg();
+		out << "<group num = \"" << 99 << "\">" << endl;//占位
+		do
+		{
+			in >> a >> b >> c;//读一行
+			for (int i = 0; i < tab_num + 2; ++i) { out << "\t"; }
+			out << "<dict>" << a << ',' << b << ',' << c << "</dict>" << endl;
+			++frame_num;
+		} while (a != -1);
+		tt_pos_frame_e = out.tellg();//获得当前文件位置
+		out.seekg(tt_pos_frame_s);//回到之前位置
+		out << "<group num = \"" << frame_num << "\">" << endl;
+		out.seekg(tt_pos_frame_e);//会到后来位置
+		for (int i = 0; i < tab_num + 1; ++i) { out << "\t"; }
+		out << "</group>" << endl;
+		num++;
+		frame_num = 0;
+	} while (!in.eof());
+	//第一层
+	{
+		tt_pos_end = out.tellg();//获得当前文件位置
+		out.seekg(tt_pos_start);//回到之前位置
+		out << "<" << name << " num = \"" << num << "\">" << endl;
+
+		out.seekg(tt_pos_end);//会到后来位置
+		for (int i = 0; i < tab_num; ++i) { out << "\t"; }
+		out << "</" << name << ">" << endl;
+	}
+}
