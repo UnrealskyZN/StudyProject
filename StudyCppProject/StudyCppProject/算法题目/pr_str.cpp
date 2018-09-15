@@ -1,11 +1,12 @@
+//è¯¥æ–‡ä»¶æ˜¯ä¸èƒ½ç”¨çš„
 #pragma warning(disable:4996)
 #include<iostream>
 #include<fstream>
 #include<cstdarg>
 #include<string>
 #include <direct.h>
-#define FILE_PATH	"C:\\Users\\12965\\Desktop\\Ì¨´Ê.txt"
-#define FILE_PATH2	"C:\\Users\\12965\\Desktop\\Ì¨´Ê.prtl"
+#define FILE_PATH	"C:\\Users\\12965\\Desktop\\å°è¯.txt"
+#define FILE_PATH2	"C:\\Users\\12965\\Desktop\\å°è¯.prtl"
 
 #define PATH	"C:\\Users\\UnrealSky_ZN_PC\\Desktop\\1\\"
 #define H_KIND	".h"
@@ -40,7 +41,7 @@ void defineToCase()
 		{
 			str.shrink_to_fit();
 			tag = change(str, tabstr,nullstr);
-		} while (tag);//²»¶ÏµÄÑ°ÕÒÍ¬Ò»ĞĞ
+		} while (tag);//ä¸æ–­çš„å¯»æ‰¾åŒä¸€è¡Œ
 		out << "case " << str.c_str() << ":" << endl;
 		out << "{" << endl;
 		out << "CCLOG(\"This is " << str.c_str() << "\");" << endl;
@@ -63,7 +64,7 @@ void sceneTemplate(ifstream &in, ofstream &out, string &t, string &scenename)
 		{
 			str.shrink_to_fit();
 			tag = change(str, t, scenename);
-		} while (tag);//²»¶ÏµÄÑ°ÕÒÍ¬Ò»ĞĞ
+		} while (tag);//ä¸æ–­çš„å¯»æ‰¾åŒä¸€è¡Œ
 		out << str.c_str() << endl;
 	}
 }
@@ -124,7 +125,7 @@ void prTileChange()
 	template_file.open(FILE_PATH2);
 	title_file.open(FILE_PATH);
 
-	wstring old_str = L"Ì¨´ÊÄ£°å";
+	wstring old_str = L"å°è¯æ¨¡æ¿";
 	string new_str;
 	int line_index = 0;
 
@@ -132,10 +133,10 @@ void prTileChange()
 	int index = 0;*/
 	wstring template_str;
 	wchar_t wch;
-	//template_file.read((char*)(&wch), 2);//¶Áµô¿ªÍ·Çø±ğ
+	//template_file.read((char*)(&wch), 2);//è¯»æ‰å¼€å¤´åŒºåˆ«
 	while (template_file.read((char*)(&wch),2))
 	{
-		if (wch == 0x000D) // ÅĞ¶Ï»Ø³µ
+		if (wch == 0x000D) // åˆ¤æ–­å›è½¦
 		{
 			template_str.append(1, wch);
 			break;
@@ -153,7 +154,7 @@ void prTileChange()
 
 
 
-	while (title_file >> new_str)//¶ÁÈ¡Ã¿Ò»ĞĞÌ¨´Ê
+	while (title_file >> new_str)//è¯»å–æ¯ä¸€è¡Œå°è¯
 	{
 		wstring new_strw = s2ws(new_str);
 		int new_len = new_strw.length();
@@ -161,7 +162,7 @@ void prTileChange()
 		old_len = new_len;
 
 		char file_name[100];
-		sprintf_s(file_name, "C:\\Users\\12965\\Desktop\\Ì¨´ÊÎÄ¼ş¼Ğ\\title_%04d.prtl", line_index++);
+		sprintf_s(file_name, "C:\\Users\\12965\\Desktop\\å°è¯æ–‡ä»¶å¤¹\\title_%04d.prtl", line_index++);
 		out_file.open(file_name);
 		//out_file << 0xFFFE;
 		out_file.write("\xff\xfe", 2);
@@ -175,15 +176,15 @@ void prTileChange()
 
 void showStr(char* str, ...)
 {
-	va_list args;//¶¨Òå¿É±ä²ÎÊıÖ¸Õë
-	va_start(args, str);//strÎª×îºóÒ»¸ö¹Ì¶¨²ÎÊı(¼È½ÓÏÂÀ´µÄ¾ÍÊÇ...µÄÄÚÈİ£©
-	char* temp = str;//va_arg·µ»ØµÄÊÇ¿ÉÑ¡²ÎÊı, ²»°üÀ¨¹Ì¶¨²ÎÊı£¬ËùÒÔÒ»¿ªÊ¼ÒªÏÈ»ñµÃ¹Ì¶¨²ÎÊı
+	va_list args;//å®šä¹‰å¯å˜å‚æ•°æŒ‡é’ˆ
+	va_start(args, str);//strä¸ºæœ€åä¸€ä¸ªå›ºå®šå‚æ•°(æ—¢æ¥ä¸‹æ¥çš„å°±æ˜¯...çš„å†…å®¹ï¼‰
+	char* temp = str;//va_argè¿”å›çš„æ˜¯å¯é€‰å‚æ•°, ä¸åŒ…æ‹¬å›ºå®šå‚æ•°ï¼Œæ‰€ä»¥ä¸€å¼€å§‹è¦å…ˆè·å¾—å›ºå®šå‚æ•°
 	while (temp != nullptr)
 	{
 		cout << temp << endl;
-		temp = va_arg(args, char*);//¸æÖª°´ÕÕÊ²Ã´ÀàĞÍÊı¾İÈ¡³ö
+		temp = va_arg(args, char*);//å‘ŠçŸ¥æŒ‰ç…§ä»€ä¹ˆç±»å‹æ•°æ®å–å‡º
 	}
-	va_end(args);//Çå¿Õ²ÎÊıÖ¸Õë
+	va_end(args);//æ¸…ç©ºå‚æ•°æŒ‡é’ˆ
 }
 
 int main()
